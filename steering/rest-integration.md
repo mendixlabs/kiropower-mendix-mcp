@@ -62,7 +62,7 @@ Maps JSON fields to entity attributes. Create with `ped_create_document` using t
 
 Reverses the process — serializes Mendix entities back to JSON for request bodies.
 
-## Data Transformers (Mendix 11.9+)
+## Data Transformers (Mendix 11.12+)
 
 Use JSLT transformers to reshape complex API responses before passing them to an import mapping. This simplifies the mapping and avoids deeply nested entity structures.
 

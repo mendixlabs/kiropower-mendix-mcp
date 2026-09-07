@@ -10,19 +10,27 @@ Use this when creating or updating view entities with OQL queries.
 
 ## MCP Tools
 
+There are no dedicated OQL tools. `oql_generate` and `oql_read` were removed. Everything runs through the `view-entities` skill plus the standard PED tools.
+
 ```
-oql_generate(moduleName, userIntent)               → generate OQL from natural language
-oql_generate(moduleName, userIntent, documentName) → generate and write directly
-oql_read(documentName)                             → read existing OQL
+read_skill([{skillName: "view-entities"}])                             → mandatory, load first
 ped_find_document(moduleName, "DomainModels$ViewEntitySourceDocument") → check if exists
+ped_read_document("DomainModels$ViewEntitySourceDocument", name)       → read existing OQL
+ped_create_document([{...}])                                           → create the source document
+ped_update_document(documentType, documentName, operations)            → write the OQL
+ped_check_errors([{documentType, documentName}])                       → validate
 ```
 
 ## Creating a View Entity
 
 1. Create the `ViewEntitySourceDocument` first:
 ```
-ped_create_document(documentType="DomainModels$ViewEntitySourceDocument", moduleName="MyFirstModule",
-  documentName="CustomerSummaryView", documentContent={"$Type": "DomainModels$ViewEntitySourceDocument", "name": "CustomerSummaryView"})
+ped_create_document(documents=[{
+  "documentType": "DomainModels$ViewEntitySourceDocument",
+  "moduleName": "MyFirstModule",
+  "documentName": "CustomerSummaryView",
+  "documentContent": {"$Type": "DomainModels$ViewEntitySourceDocument", "name": "CustomerSummaryView"}
+}])
 ```
 
 2. Add the entity to the domain model referencing it:
@@ -38,10 +46,7 @@ ped_create_document(documentType="DomainModels$ViewEntitySourceDocument", module
 }
 ```
 
-3. Generate and write OQL:
-```
-oql_generate(moduleName="MyFirstModule", userIntent="...", documentName="MyFirstModule.CustomerSummaryView")
-```
+3. Write the OQL onto the source document with `ped_update_document`. Get the exact property path and payload shape from the `view-entities` skill, then `ped_get_schema` with `kind: "element"` for `DomainModels$ViewEntitySourceDocument`. Do not guess it.
 
 ## OQL Syntax Rules
 

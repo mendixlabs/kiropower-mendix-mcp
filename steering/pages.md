@@ -11,16 +11,41 @@ Use this when creating or modifying pages and their widgets via the MCP server.
 
 ## MCP Tools
 
+Pages have their own tool pair. The `ped_*` tools do not handle pages.
+
 ```
-ped_find_document(moduleName, "Pages$Page")               → check if exists first
-ped_get_schema(["Pages$Page"])                            → get schema
-ped_create_document([{...}])                              → create page
-ped_read_document("Module.PageName", "Pages$Page")        → read page
-ped_update_document("Pages$Page", "Module.PageName", ops) → update
-ped_check_errors([{documentType, documentName}])          → validate after every change
+read_skill([{skillName: "page-gen-common"}])              → mandatory, load first
+ped_find_document(moduleName, "Pages$Page")               → check if exists
+pg_read_page(moduleName, pageName)                        → read the LightPage structure
+pg_read_page(moduleName, pageName, paths, depth)          → read only some sections
+pg_patch_page(moduleName, pageName, patches)              → create or patch
+ped_check_errors([{documentType, documentName}])          → validate after the final change
 ```
 
-Always call `ped_find_document` first — if a match exists, read and update instead of creating.
+`pg_patch_page` takes JSON Patch operations (RFC 6902) against the LightPage structure:
+
+- **Create a page:** one operation, `{"op": "replace", "path": "", "value": {<full LightPage>}}`
+- **Edit a page:** targeted operations instead of a root replace. Every path must point at an element that already exists, so read with `pg_read_page` first.
+
+The LightPage schema is not the PED document format. Get it from the `page-gen-common` skill, not from `ped_get_schema`.
+
+A root read returns this shape, with nested widget lists collapsed to `"..."` until you request them by path:
+
+```json
+{
+  "title": "Homepage",
+  "layout": "Atlas_Core.Atlas_TopBar",
+  "parameters": [],
+  "variables": [],
+  "widgets": [
+    { "$Type": "Pages$Content", "slot": "Main", "widgets": ["..."] }
+  ]
+}
+```
+
+Expand a branch with `pg_read_page(moduleName, pageName, paths: ["/widgets/0"])` rather than reading the whole page.
+
+Always call `ped_find_document` first. If a match exists, patch it instead of replacing the root.
 
 ## Naming Conventions
 
@@ -40,7 +65,9 @@ Always call `ped_find_document` first — if a match exists, read and update ins
 | `Atlas_Core.PopupLayout` | Modal/popup dialog |
 | `Atlas_Core.Atlas_Default_Sidebar` | Page with sidebar |
 
-## Common Widget Types (get schema before use)
+## Common Widget Types
+
+Widget `$Type` names carry over into LightPage unchanged, so the names below are correct. What differs is the nesting: LightPage is flatter than the PED document format. Take the authoritative structure and each widget's required properties from the `page-gen-common` skill.
 
 | Widget | Use |
 |---|---|

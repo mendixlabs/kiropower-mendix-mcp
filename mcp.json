@@ -4,7 +4,19 @@
       "type": "http",
       "url": "http://localhost:7782/mcp",
       "disabled": false,
-      "autoApprove": []
+      "autoApprove": [
+        "list_modules",
+        "read_skill",
+        "ped_list_folder",
+        "ped_find_document",
+        "ped_read_document",
+        "ped_get_schema",
+        "ped_check_errors",
+        "pg_read_page",
+        "glob",
+        "read_file",
+        "search_mendix_knowledge_base"
+      ]
     }
   }
 }

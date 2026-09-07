@@ -4,6 +4,9 @@ inclusion: manual
 
 # Theme & Styling — MCP Server Workflow
 
+> **Important:** Load the `theming` MCP skill before changing styles, and `design-properties` before touching any `design-properties.json`.
+> Theme files live behind the `glob` roots `/theme` and `/themesource`. Run `glob` first to get real paths, then `read_file` and `write_file`.
+
 ## When to Use This Guidance
 
 Apply this whenever working with:

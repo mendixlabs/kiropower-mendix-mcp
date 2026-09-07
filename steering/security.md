@@ -6,6 +6,9 @@ inclusion: manual
 
 Use this when working with module roles, entity access rules, and page/microflow access.
 
+> **Important:** `Security$ModuleSecurity` is a singleton in every module. Read it directly instead of searching for it.
+> Project security is project-level: pass `documentType: "Security$ProjectSecurity"` and omit `documentName`.
+
 ## Security Concepts
 
 - **Module Roles** — permissions within a single module (e.g., `Shop.Admin`, `Shop.Viewer`)
@@ -23,7 +26,7 @@ ped_read_document(documentName="MyFirstModule", documentType="DomainModels$Domai
 
 Get schema:
 ```
-ped_get_schema(elementTypes=["DomainModels$AccessRule"])
+ped_get_schema(elementTypes=["DomainModels$AccessRule"], kind="constructor")
 ```
 
 Key properties:

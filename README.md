@@ -13,7 +13,7 @@ Kiro ──MCP tools──▶ Studio Pro MCP Server (localhost:7782) ──▶ .
                                                                ◀── live updates in Studio Pro
 ```
 
-1. Studio Pro runs an MCP server locally on a configurable port (default `7782`)
+1. Studio Pro runs an MCP server locally on a configurable port (`7782` unless taken; the status bar shows the active port)
 2. Kiro connects to it via the MCP configuration in `.kiro/settings/mcp.json`
 3. Kiro uses the MCP tools to read and write directly to the Mendix model
 4. Every change appears live in Studio Pro — no restart or sync needed
@@ -36,35 +36,46 @@ If you're not sure which to use: if Studio Pro is running with its MCP server en
 
 ## Prerequisites
 
-### 1. Enable the MCP Server in Studio Pro
+### 1. Use Studio Pro 11.10 or later
 
-Navigate to **Preferences → Maia → MCP Server** and check **Enable MCP Server**.
+The Studio Pro MCP Server shipped in **11.10**. Earlier versions have no server to connect to. Page-editing tools arrived in 11.11, so 11.11+ is recommended.
 
-You can also configure the port here (default is `7782`). Make sure the port in `.kiro/settings/mcp.json` matches.
+Studio Pro must be signed in and have an internet connection for the MCP server to work.
+
+### 2. Enable the MCP Server in Studio Pro
+
+Navigate to **Preferences → AI → MCP Server** and check **Enable MCP Server**.
+
+You can configure the port in the same tab. From 11.13 onward Studio Pro picks a free port automatically when the configured one is taken, so two instances can run side by side. **Read the active port from the Studio Pro status bar** rather than assuming `7782`.
 
 For full details, see the official docs: [Studio Pro MCP Server](https://docs.mendix.com/refguide/studio-pro-mcp-server/)
 
-### 2. Open your project in Studio Pro
+### 3. Open your project in Studio Pro
 
 The MCP server only runs while Studio Pro is open with your project loaded. Kiro cannot connect if Studio Pro is closed.
 
-### 3. Verify the MCP config in this workspace
+### 4. Verify the MCP config in this workspace
 
-The connection is pre-configured at `.kiro/settings/mcp.json`:
+The power ships an `mcp.json` at its root. Kiro merges it into your workspace config at `.kiro/settings/mcp.json`, which is the file Kiro actually reads. Both hold the same content:
 
 ```json
 {
   "mcpServers": {
     "localhost-7782": {
+      "type": "http",
       "url": "http://localhost:7782/mcp",
       "disabled": false,
       "autoApprove": [
-        "ped_read_document",
-        "ped_find_document",
-        "ped_get_schema",
-        "oql_generate",
+        "list_modules",
+        "read_skill",
         "ped_list_folder",
+        "ped_find_document",
+        "ped_read_document",
+        "ped_get_schema",
+        "ped_check_errors",
+        "pg_read_page",
         "glob",
+        "read_file",
         "search_mendix_knowledge_base"
       ]
     }
@@ -72,28 +83,59 @@ The connection is pre-configured at `.kiro/settings/mcp.json`:
 }
 ```
 
-If you changed the port in Studio Pro, update the `url` here to match.
+`autoApprove` covers read-only tools only. Writes still prompt: `ped_create_document`, `ped_create_module`, `ped_update_document`, `pg_patch_page`, `write_file`, `install_marketplace_module`.
+
+If Studio Pro reports a different port in its status bar, update the `url` in `.kiro/settings/mcp.json` to match.
 
 ---
 
 ## What You Can Build
 
+Tool names below are verified against Studio Pro 11.14.
+
 | Capability | Tools Used |
 |---|---|
-| Domain model — entities, attributes, associations, enumerations | `ped_update_document`, `ped_create_document` |
+| Domain model — entities, attributes, associations, enumerations | `ped_read_document`, `ped_update_document` |
 | Microflows and nanoflows | `ped_create_document`, `ped_update_document` |
-| Pages and widgets | `ped_create_document`, `ped_update_document` |
+| Workflows | `ped_create_document`, `ped_update_document` |
+| Pages and widgets | `pg_read_page`, `pg_patch_page` |
 | Security — access rules, module roles | `ped_update_document` |
 | Navigation — menus, home pages | `ped_update_document` |
-| OQL queries and view entities | `oql_generate`, `oql_read` |
+| View entities and OQL | `read_skill` (`view-entities`) plus `ped_*` |
 | REST API integration | `ped_create_document`, `ped_update_document` |
-| OData inter-app data sharing | `ped_create_document`, `oql_generate` |
+| OData inter-app data sharing | `ped_create_document`, `ped_update_document` |
 | Business Events (Kafka pub/sub) | `ped_create_document`, `ped_update_document` |
 | JavaScript actions | `glob`, `read_file`, `write_file` |
+| Theme and design properties | `glob`, `read_file`, `write_file` |
 | Java actions | Kiro file tools (`Read`, `Edit`, `Write`) |
 | Mendix AI agents | `ped_create_document`, `ped_get_schema` |
 | Custom pluggable widgets | npm / widget build tools |
+| Marketplace module install | `install_marketplace_module` |
+| Version control history | `glob`, `read_file` on `/version-control` |
 | Mendix knowledge lookup | `search_mendix_knowledge_base` |
+
+**Pages use their own tools.** `pg_read_page` and `pg_patch_page` work on a "LightPage" structure with JSON Patch (RFC 6902), not the PED document format. The `ped_*` tools do not handle pages.
+
+**There are no OQL tools.** `oql_generate` and `oql_read` existed in earlier releases and are gone. OQL now runs through the `view-entities` server skill plus the `ped_*` tools.
+
+### Newer document types (server-side support, no steering guide yet)
+
+Studio Pro added these to Maia Make after this power was written. The MCP tools reach them, but there is no dedicated steering file, so expect to hand-hold Kiro more:
+
+| Document type | Available from |
+|---|---|
+| Data Transformers | 11.12 |
+| JSON Structures | 11.13 |
+| Change Data Capture | 11.14 |
+
+See [Maia Make Capabilities](https://docs.mendix.com/refguide/maia-make/) for the current list.
+
+### Studio Pro features this power does not cover
+
+- **Agent Skills** (11.11+): `SKILL.md` files under `skillssource/`, loaded by Maia inside Studio Pro
+- **`AGENTS.md` instructions** (11.12+): project-level and module-level custom instructions Maia reads automatically
+- **AI Agent Task workflow element** (11.14)
+- **Custom LLM providers** (11.12, public beta): OpenAI-compatible or AWS Bedrock, configured per project
 
 ---
 
@@ -122,7 +164,6 @@ This power includes steering files that Kiro loads based on what you're working 
 | `steering/agents.md` | Setting up Mendix AI agents (Mendix 11.9+) |
 | `steering/system-module.md` | System module entity reference |
 | `steering/assess-quality.md` | Auditing Mendix project quality |
-| `steering/assess-migration.md` | Assessing a non-Mendix app for migration |
 
 ---
 
@@ -140,8 +181,22 @@ This power includes steering files that Kiro loads based on what you're working 
 
 **Kiro can't connect to the MCP server**
 - Make sure Studio Pro is open with your project loaded
-- Check that the MCP server is enabled: Preferences → Maia → MCP Server
-- Verify the port matches between Studio Pro and `.kiro/settings/mcp.json`
+- Check that the MCP server is enabled: Preferences → AI → MCP Server
+- Confirm you are on Studio Pro 11.10 or later. Earlier versions have no MCP server
+- Verify the port in `.kiro/settings/mcp.json` matches the port shown in the Studio Pro status bar
+
+**The port keeps changing**
+- From 11.13 Studio Pro takes the next free port when `7782` is busy, usually because another Studio Pro instance already holds it. Close the other instance or point `.kiro/settings/mcp.json` at the port in the status bar.
+
+**Checking which tools the server actually exposes**
+- Tool names can change between Studio Pro releases. To list what your version offers, with `<port>` from the status bar:
+
+```bash
+curl -s -X POST http://localhost:<port>/mcp \
+  -H 'Content-Type: application/json' \
+  -H 'Accept: application/json, text/event-stream' \
+  -d '{"jsonrpc":"2.0","id":1,"method":"tools/list"}'
+```
 
 **Changes aren't appearing in Studio Pro**
 - The MCP server reflects changes in real time — if you don't see them, try clicking into the affected document in Studio Pro to refresh the view
@@ -154,5 +209,6 @@ This power includes steering files that Kiro loads based on what you're working 
 ## Further Reading
 
 - [Studio Pro MCP Server — Official Docs](https://docs.mendix.com/refguide/studio-pro-mcp-server/)
-- [Maia Make Capabilities](https://docs.mendix.com/refguide/maia-make-capabilities/)
+- [Maia Make Capabilities](https://docs.mendix.com/refguide/maia-make/)
 - [Mendix AI Assistance (Maia)](https://docs.mendix.com/refguide/mendix-ai-assistance/)
+- [Studio Pro Release Notes](https://docs.mendix.com/releasenotes/studio-pro/)

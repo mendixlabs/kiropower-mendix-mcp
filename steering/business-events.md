@@ -73,7 +73,7 @@ If they don't match, events will fail to serialize/deserialize.
 
 ```
 ped_update_document("DomainModels$DomainModel", "MyModule", ops)  → add PBE_ entity
-ped_get_schema(["DomainModels$Entity"])                           → entity schema
+ped_get_schema(["DomainModels$Entity"], kind: "constructor")      → entity schema
 ped_create_document([{documentType: "Microflows$Microflow", ...}]) → create handler
 ped_check_errors([...])                                           → validate
 ```

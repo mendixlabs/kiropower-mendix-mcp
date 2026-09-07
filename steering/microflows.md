@@ -7,7 +7,8 @@ inclusion: manual
 Use this when creating or modifying microflows via the MCP server.
 
 > **Important:** Before creating or modifying any microflow, load the MCP skills:
-> `microflow-common`, `microflow-update`, `microflow-expressions`, `microflow-xpath`
+> `microflow-common`, `microflow-expressions`, `microflow-xpath`
+> Add `validation-microflow` for `VAL_*` flows and `microflow-unit-testing` when generating tests.
 > Also read the critical sub-references from `microflow-common`:
 > `references/best-practices.md`, `references/flows.md`, `references/layout.md`, `references/variable-scope.md`
 
@@ -25,9 +26,10 @@ Use this when creating or modifying microflows via the MCP server.
 
 ```
 ped_find_document(moduleName, "Microflows$Microflow")    → check if exists first
-ped_get_schema(["Microflows$Microflow"])                 → get schema
-ped_create_document([{...}])                             → create microflow
-ped_read_document("Module.MyMicroflow", "Microflows$Microflow") → read
+ped_get_schema(["Microflows$Microflow"], kind: "constructor")   → schema for creating
+ped_get_schema(["Microflows$Microflow"], kind: "element")       → schema for reading/updating
+ped_create_document([{...}])                                    → create microflow
+ped_read_document("Microflows$Microflow", "Module.MyMicroflow") → read (type first, then name)
 ped_update_document("Microflows$Microflow", "Module.MyMicroflow", ops) → update
 ped_check_errors([{documentType, documentName}])         → validate after every change
 ```

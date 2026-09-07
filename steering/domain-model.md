@@ -6,6 +6,9 @@ inclusion: manual
 
 Use this when creating or modifying entities, attributes, associations, and enumerations.
 
+> **Important:** Load the `folder-structure` MCP skill before creating any document.
+> The domain model is a singleton that always exists. Never create one, never pass it to `ped_find_document`, and use the module name alone as `documentName`.
+
 ## Reading the Domain Model
 
 ```
@@ -21,7 +24,7 @@ The result contains:
 
 Always get the schema first:
 ```
-ped_get_schema(elementTypes=["DomainModels$Entity"])
+ped_get_schema(elementTypes=["DomainModels$Entity"], kind="constructor")
 ```
 
 Then add via `ped_update_document` with an `add` operation on `/entities`.
@@ -43,19 +46,25 @@ ped_find_document(moduleName="MyFirstModule", documentType="Enumerations$Enumera
 
 Get schema:
 ```
-ped_get_schema(elementTypes=["Enumerations$Enumeration"])
+ped_get_schema(elementTypes=["Enumerations$Enumeration"], kind="constructor")
 ```
 
 Create:
 ```
-ped_create_document(documentType="Enumerations$Enumeration", moduleName="MyFirstModule", documentName="Status", documentContent={...})
+ped_create_document(documents=[{
+  "documentType": "Enumerations$Enumeration",
+  "moduleName": "MyFirstModule",
+  "documentName": "Status",
+  "documentContent": {...},
+  "folderPath": "Enumerations"
+}])
 ```
 
 ## Creating Associations
 
 Get schema:
 ```
-ped_get_schema(elementTypes=["DomainModels$Association"])
+ped_get_schema(elementTypes=["DomainModels$Association"], kind="constructor")
 ```
 
 Add via `ped_update_document` on `/associations`. Key properties:

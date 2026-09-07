@@ -41,17 +41,20 @@ Use this when publishing or consuming data between Mendix apps via OData service
 ## MCP Tools
 
 ```
-ped_read_document(moduleName, "DomainModels$DomainModel")     → inspect domain model
-ped_get_schema(["DomainModels$Entity"])                       → get entity schema (for view entities)
-oql_generate(moduleName, userIntent, documentName)            → generate OQL for view entities
+read_skill([{skillName: "view-entities"}])                    → mandatory before any view entity work
+ped_read_document("DomainModels$DomainModel", moduleName)     → inspect domain model
+ped_get_schema(["DomainModels$Entity"], kind: "constructor")  → get entity schema (for view entities)
+ped_update_document(documentType, documentName, operations)   → write the OQL onto the source document
 ped_check_errors([{documentType, documentName}])              → validate
 ```
+
+There are no `oql_*` tools. They were removed. See `oql-queries.md`.
 
 ## Building the Producer
 
 ### Step 1: Create view entities
 
-View entities flatten joins, filter datasets, and compute fields. Always back them with an OQL query via `oql_generate`.
+View entities flatten joins, filter datasets, and compute fields. Always back them with an OQL query. Load the `view-entities` skill, then write the query through `ped_update_document`. See `oql-queries.md` for the full sequence and OQL syntax rules.
 
 Example OQL for a flattened order view:
 ```sql

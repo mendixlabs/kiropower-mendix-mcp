@@ -6,6 +6,9 @@ inclusion: manual
 
 Use this when setting up or modifying navigation: home pages, menu items, login pages, and role-based routing.
 
+> **Important:** Load the `navigation` MCP skill before **any** navigation change, however trivial. Add `glyph-icons` when setting menu icons.
+> The navigation document is project-level: pass `documentType: "Navigation$NavigationDocument"` and omit `documentName` entirely.
+
 ## Navigation Concepts
 
 - **Navigation Profiles** — Responsive, Phone, Tablet, and optionally Native
@@ -36,7 +39,7 @@ Each profile contains:
 
 Get schema:
 ```
-ped_get_schema(elementTypes=["Navigation$MenuItem"])
+ped_get_schema(elementTypes=["Navigation$MenuItem"], kind="constructor")
 ```
 
 Key properties:

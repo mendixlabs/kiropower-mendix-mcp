@@ -6,6 +6,9 @@ inclusion: manual
 
 Use this when setting up or modifying AI agents in Mendix (requires Mendix 11.9+ and the AgentEditorCommons marketplace module).
 
+> **Unverified against Studio Pro 11.14.** The rest of this power was checked against a live 11.14 server; this file was not, because `AgentEditorCommons` was not installed in the test project. The `AgentEditorCommons$*` type names below may have drifted. Run `ped_get_schema` before trusting any of them, and check `list_modules` to confirm the module is installed.
+> 11.14 also added an **AI Agent Task** workflow element, which this guide does not cover.
+
 ## Core Document Types
 
 Four document types combine to define an agent:
@@ -47,7 +50,7 @@ When creating, reverse the order.
 
 ## Multi-Line Prompts
 
-System prompts often span multiple lines. Use dollar-quoting (`$...$`) rather than single quotes when writing prompts in MDL — single quotes cannot span lines.
+System prompts often span multiple lines. Pass them as a normal JSON string in `documentContent` with escaped newlines for line breaks. Do not use MDL dollar-quoting (`$...$`); that syntax belongs to the MxCLI power, not to MCP tool calls.
 
 ## Calling Agents from Microflows
 

@@ -73,8 +73,8 @@ Instead: modify the entity in place using `ped_update_document` to add/remove at
 ## MCP Tools for REST Microflows
 
 ```
-ped_get_schema(["Microflows$HttpConfiguration"])  → REST config schema
-ped_get_schema(["Microflows$CallRestAction"])      → inline REST CALL schema
+ped_get_schema(["Microflows$HttpConfiguration", "Microflows$CallRestAction"], kind: "constructor")
+                                                   → batch both schemas in one call
 ped_create_document([{documentType: "Microflows$Microflow", ...}]) → create microflow
 ped_update_document("Microflows$Microflow", "Module.MF", ops)      → add REST action
 ped_check_errors([...])                                            → validate

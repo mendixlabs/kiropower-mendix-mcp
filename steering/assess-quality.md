@@ -11,10 +11,12 @@ Use this when the user asks to evaluate, audit, or health-check a Mendix project
 Use MCP tools to explore the project:
 
 ```
-ped_list_folder(moduleName)           → list documents in a module
-ped_read_document(domainModel)        → read entities and associations
-ped_find_document(moduleName, type)   → find microflows, pages, etc.
-ped_check_errors(documents)           → check for validation errors
+list_modules()                                          → modules plus writable/fromMarketplace flags
+ped_list_folder(moduleName, folderPath?)                → list documents and subfolders
+ped_read_document("DomainModels$DomainModel", moduleName) → read entities and associations
+ped_find_document(moduleName, documentType)             → find microflows, pages, etc.
+pg_read_page(moduleName, pageName)                      → read a page
+ped_check_errors(documents)                             → check for validation errors
 ```
 
 ---
