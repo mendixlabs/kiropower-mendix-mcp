@@ -6,15 +6,27 @@ inclusion: manual
 
 Use this when creating or updating view entities with OQL queries.
 
-> **Important:** Load the `view-entities` MCP skill for the full reference before working with OQL.
+> **Load the `view-entities` skill first** for the OQL syntax reference, tool sequences, and constraints.
+> **Then ignore its `oql_generate` sections.** See below.
 
-## MCP Tools
+## The `oql_generate` trap
 
-There are no dedicated OQL tools. `oql_generate` and `oql_read` were removed. Everything runs through the `view-entities` skill plus the standard PED tools.
+The `view-entities` skill has sections titled "When to Call `oql_generate`" and "Tool Inputs / `oql_generate`". That tool is **not available over MCP**. Calling it fails:
 
 ```
-read_skill([{skillName: "view-entities"}])                             → mandatory, load first
+MCP error -32602: Tool oql_generate not found
+```
+
+The skills are written for Maia running inside Studio Pro. The MCP server exposes a subset of Maia's tools, so a skill can describe something `tools/list` does not carry. `oql_generate` is the only known case as of 11.14. When a skill names a tool you have not seen in `tools/list`, trust `tools/list`.
+
+**What this means in practice:** you write the OQL yourself. There is no natural-language generation step over MCP. Everything else in the skill (syntax, sequences, constraints) still applies.
+
+## Working sequence
+
+```
+read_skill([{skillName: "view-entities"}])                             → syntax reference
 ped_find_document(moduleName, "DomainModels$ViewEntitySourceDocument") → check if exists
+ped_get_schema(["DomainModels$ViewEntitySourceDocument"], kind: "element")
 ped_read_document("DomainModels$ViewEntitySourceDocument", name)       → read existing OQL
 ped_create_document([{...}])                                           → create the source document
 ped_update_document(documentType, documentName, operations)            → write the OQL
@@ -23,7 +35,8 @@ ped_check_errors([{documentType, documentName}])                       → valid
 
 ## Creating a View Entity
 
-1. Create the `ViewEntitySourceDocument` first:
+1. Create the `ViewEntitySourceDocument`:
+
 ```
 ped_create_document(documents=[{
   "documentType": "DomainModels$ViewEntitySourceDocument",
@@ -34,6 +47,7 @@ ped_create_document(documents=[{
 ```
 
 2. Add the entity to the domain model referencing it:
+
 ```json
 {
   "$Type": "DomainModels$Entity",
@@ -46,9 +60,11 @@ ped_create_document(documents=[{
 }
 ```
 
-3. Write the OQL onto the source document with `ped_update_document`. Get the exact property path and payload shape from the `view-entities` skill, then `ped_get_schema` with `kind: "element"` for `DomainModels$ViewEntitySourceDocument`. Do not guess it.
+3. Write the OQL onto the source document with `ped_update_document`. Get the exact property path from `ped_get_schema` with `kind: "element"`. Do not guess it.
 
 ## OQL Syntax Rules
+
+The `view-entities` skill carries the full reference. These are the rules that most often bite:
 
 ### All SELECT columns MUST have explicit AS aliases
 ```sql
@@ -61,7 +77,7 @@ FROM Finance.ForecastLine AS fl
 ```
 
 ### No ORDER BY or LIMIT at the view level
-ORDER BY and LIMIT are only valid inside correlated subqueries.
+Both are only valid inside correlated subqueries.
 
 ### Aggregate functions must be lowercase
 ```sql

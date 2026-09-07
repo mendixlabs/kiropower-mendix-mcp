@@ -8,6 +8,7 @@ Use this when working with module roles, entity access rules, and page/microflow
 
 > **Important:** `Security$ModuleSecurity` is a singleton in every module. Read it directly instead of searching for it.
 > Project security is project-level: pass `documentType: "Security$ProjectSecurity"` and omit `documentName`.
+> Load the `microflow-xpath` skill before writing any `xpathConstraint`.
 
 ## Security Concepts
 
@@ -35,6 +36,24 @@ Key properties:
 - `allowDelete` — boolean
 - `memberAccesses` — per-attribute read/write permissions
 - `xpathConstraint` — optional XPath filter
+
+### Quoting inside `xpathConstraint`
+
+The `microflow-xpath` skill covers XPath syntax. One thing it does not cover is the quoting, and it is the most common source of broken access rules.
+
+The constraint is a string, and single quotes inside it must be **doubled**:
+
+```
+'[System.owner = ''[%CurrentUser%]'']'
+```
+
+Tokens are quoted in XPath and unquoted in Mendix expressions. In a constraint you always want the quoted form, `'[%CurrentUser%]'`.
+
+The same property name, `xpathConstraint`, is used on `Microflows$RetrieveAction`, where no doubling applies because the value is a plain string:
+
+```json
+"xpathConstraint": "[Status = 'MyFirstModule.Status.Active']"
+```
 
 ## Page Access
 

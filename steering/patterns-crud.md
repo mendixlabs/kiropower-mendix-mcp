@@ -6,14 +6,13 @@ inclusion: manual
 
 Use this when implementing standard Create, Read, Update, Delete patterns in Mendix.
 
-## Naming Conventions
+> Load `microflow-common` and `page-gen-common` first, and `conventions.md` for the prefix meanings.
 
-| Prefix | Purpose | Example |
-|---|---|---|
-| `ACT_` | User-triggered action microflow | `ACT_Customer_Save` |
-| `VAL_` | Validation microflow (returns Boolean) | `VAL_Customer_Save` |
-| `DS_` | Data source microflow (returns object or list) | `DS_Customer_GetAll` |
-| `SUB_` | Sub-microflow (internal, called by other microflows) | `SUB_SendNotification` |
+## The rule that shapes every pattern below
+
+The `folder-structure` skill states that `ACT_` and `DS_` microflows must not contain business logic. They may only call client activities (close page, download file, show home page, show message, show page) and other microflows.
+
+So every `ACT_` here is a thin shell. Create, commit, delete, and default-setting all live in a `SUB_` that the `ACT_` calls. Writing a `CommitAction` directly into an `ACT_` puts it in the wrong layer and the folder placement will fight you.
 
 ## Standard CRUD Microflow Set
 
@@ -23,19 +22,44 @@ For an entity `MyFirstModule.Customer`:
 |---|---|---|
 | `DS_Customer_GetList` | Retrieve all customers | List of Customer |
 | `DS_Customer_GetById` | Retrieve single customer by ID | Customer object |
-| `ACT_Customer_New` | Open new customer form | Void |
-| `ACT_Customer_Save` | Validate and commit customer | Void |
-| `ACT_Customer_Delete` | Delete customer | Void |
+| `ACT_Customer_New` | Call `SUB_Customer_Create`, open the form | Void |
+| `ACT_Customer_Save` | Call `SUB_Customer_Save`, show message or close | Void |
+| `ACT_Customer_Delete` | Call `SUB_Customer_Delete`, close or refresh | Void |
+| `SUB_Customer_Create` | Create the object and set defaults | Customer |
+| `SUB_Customer_Save` | Validate, then commit | Boolean |
+| `SUB_Customer_Delete` | Delete the object | Boolean |
+| `VAL_Customer_Save` | Validate required fields | Boolean |
 
 ## Save Pattern
 
 ```
-ACT_Customer_Save
-1. Call VAL_Customer_Save
-2. ExclusiveSplit on result:
+ACT_Customer_Save                        (UI layer, no business logic)
+1. Call SUB_Customer_Save → $Success
+2. ExclusiveSplit on $Success:
    - false → ShowMessage (validation error) → End
-   - true → CommitAction → ClosePageAction → End
+   - true  → ClosePageAction → End
+
+SUB_Customer_Save                        (data layer)
+1. Call VAL_Customer_Save → $IsValid
+2. ExclusiveSplit on $IsValid:
+   - false → return false
+   - true  → CommitAction (with events) → return true
 ```
+
+## Create Pattern
+
+```
+ACT_Customer_New
+1. Call SUB_Customer_Create → $Customer
+2. ShowPageAction (Customer_NewEdit, $Customer)
+
+SUB_Customer_Create
+1. CreateObjectAction (Customer, uncommitted)
+2. Set defaults on the new object
+3. Return the object
+```
+
+Create the object uncommitted so cancelling the form leaves nothing behind.
 
 ## Validation Pattern
 
@@ -57,8 +81,12 @@ WRONG:   $Task/Status = 'Completed'
 
 ```
 ACT_Customer_Delete
+1. Call SUB_Customer_Delete → $Success
+2. ClosePageAction
+
+SUB_Customer_Delete
 1. DeleteAction (delete Customer)
-2. End
+2. Return true
 ```
 
 ## Overview Page Pattern
@@ -80,8 +108,8 @@ ACT_Customer_Delete
 
 ## Best Practices
 
-- Always validate before commit — call VAL_ microflow in ACT_Save
-- Commit WITH EVENTS — triggers event handlers
-- Close page on success
-- Initialize defaults in ACT_New microflow
-- All action microflows should return Boolean success status
+- Keep `ACT_` thin: client activities and microflow calls only
+- Always validate before commit, inside the `SUB_`
+- Commit WITH EVENTS so event handlers fire
+- Create uncommitted, commit on save
+- `SUB_` microflows return a Boolean success status; `ACT_` microflows return Void

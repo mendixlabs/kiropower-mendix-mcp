@@ -6,7 +6,7 @@ inclusion: manual
 
 Use this when creating or modifying entities, attributes, associations, and enumerations.
 
-> **Important:** Load the `folder-structure` MCP skill before creating any document.
+> **Important:** Load the `folder-structure` MCP skill before creating any document, and `conventions.md` for entity, attribute, and association naming.
 > The domain model is a singleton that always exists. Never create one, never pass it to `ped_find_document`, and use the module name alone as `documentName`.
 
 ## Reading the Domain Model
@@ -96,13 +96,6 @@ Always create in dependency order:
 3. Associations (reference entities)
 4. Microflows (reference entities)
 5. Pages (reference microflows and entities)
-
-## Naming Conventions
-
-- Entities: Singular, PascalCase (`Customer`, `OrderLine`)
-- Attributes: PascalCase (`FirstName`, `OrderDate`)
-- Boolean attributes: Prefix with Is/Has/Can (`IsActive`, `HasChildren`)
-- Associations: `{FromEntity}_{ToEntity}` (`Order_Customer`)
 
 ## After Every Change
 

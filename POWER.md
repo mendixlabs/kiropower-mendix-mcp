@@ -114,7 +114,26 @@ Pages are **not** handled by the `ped_*` tools. See below.
 | `pg_read_page` | Read a page or sub-sections via JSON Pointers (RFC 6901) | `moduleName`, `pageName`, `paths?`, `depth?` |
 | `pg_patch_page` | Create a page, or patch one with JSON Patch (RFC 6902) | `moduleName`, `pageName`, `patches` |
 
-Pages use their own LightPage structure, separate from PED. To create a page, send a single `replace` operation with an empty path and the full LightPage as its value. To edit an existing page, send targeted operations instead of a root replace, and make sure every path points at an element that already exists.
+Pages use their own LightPage structure, separate from PED. `ped_get_schema` does not describe it. Take the structure and each widget's required properties from the `page-gen-common` skill.
+
+A root read returns this, with nested widget lists collapsed to `"..."` until you request them by path:
+
+```json
+{
+  "title": "Homepage",
+  "layout": "Atlas_Core.Atlas_TopBar",
+  "parameters": [],
+  "variables": [],
+  "widgets": [
+    { "$Type": "Pages$Content", "slot": "Main", "widgets": ["..."] }
+  ]
+}
+```
+
+Expand one branch with `pg_read_page(moduleName, pageName, paths: ["/widgets/0"])` rather than reading the whole page. Widget `$Type` names match Studio Pro; what differs is the nesting, which is flatter than the PED format.
+
+- **Create a page:** one operation, `{"op": "replace", "path": "", "value": {<full LightPage>}}`
+- **Edit a page:** targeted operations instead of a root replace. Every path must point at an element that already exists, so read first.
 
 ## File System Tools
 
@@ -148,7 +167,15 @@ Never use this to look up element schemas. It cannot answer schema questions. Us
 
 ## OQL and view entities
 
-There are no dedicated OQL tools. `oql_generate` and `oql_read` were removed. Load the `view-entities` skill and work through the `ped_*` tools instead.
+There are no dedicated OQL tools over MCP. Load the `view-entities` skill and work through the `ped_*` tools instead. See the next section before you do.
+
+## The server exposes a subset of Maia's tools
+
+Skills are written for Maia running inside Studio Pro, which has tools the MCP server does not expose. A skill can therefore instruct you to call something that does not exist over MCP.
+
+Known case as of 11.14: the `view-entities` skill documents `oql_generate`. Calling it returns `MCP error -32602: Tool oql_generate not found`.
+
+**`tools/list` is the authority, not the skill text.** If a skill names a tool you have not seen in `tools/list`, it is not available to you. Everything else in that skill still applies.
 
 ---
 
@@ -198,24 +225,25 @@ Call `list_modules` and only write into modules flagged `writable`. System and M
 
 ## When to Load Steering Files
 
-Two layers of guidance apply, and both are needed:
+Two layers of guidance apply:
 
 1. **Server skills** via `read_skill`. These ship with Studio Pro, track the current model API, and carry hard constraints. Load these first.
-2. **Steering files** in this power. These add Kiro-side conventions, naming patterns, and integration recipes the server does not cover.
+2. **Steering files** in this power. These are deliberately thin. Each carries only what the server skills do not: naming the skills route on but never define, tool routing the skills get wrong for MCP clients, integration recipes with no server equivalent, and work outside the MCP server's reach.
 
-Where the two disagree, the server skill wins. It is generated from the running product.
+Where the two disagree, the server skill wins, except where a steering file documents a skill being wrong for MCP specifically (see `oql-queries.md`).
 
 | Working on... | `read_skill` first | Then load steering |
 |---|---|---|
-| Entities, attributes, associations, enumerations | `folder-structure` | `domain-model.md` |
-| Microflows, nanoflows, ACT_, SUB_, DS_ | `microflow-common`, `microflow-expressions`, `folder-structure` | `microflows.md` |
-| Validation microflows (VAL_) | `validation-microflow`, `microflow-common` | `microflows.md` |
+| Naming anything, or a module with no existing pattern | `folder-structure` | `conventions.md` |
+| Entities, attributes, associations, enumerations | `folder-structure` | `domain-model.md`, `conventions.md` |
+| Microflows and nanoflows | `microflow-common`, `microflow-expressions`, `microflow-xpath` | `conventions.md` |
+| Validation microflows (VAL_) | `validation-microflow`, `microflow-common` | `conventions.md` |
+| XPath constraints | `microflow-xpath` | none |
 | CRUD patterns | `microflow-common`, `page-gen-common` | `patterns-crud.md` |
-| XPath constraints | `microflow-xpath` | `xpath-constraints.md` |
-| Pages, widgets, layouts, master-detail | `page-gen-common`, `glyph-icons` | `pages.md` |
-| SCSS/CSS theme and styling | `theming`, `design-properties` | `theme-styling.md` |
+| Pages, widgets, layouts | `page-gen-common`, `glyph-icons` | `conventions.md` |
+| SCSS/CSS theme and styling | `theming`, `design-properties` | none |
 | Custom pluggable widgets (React/TypeScript) | none | `create-custom-widget.md` |
-| Security roles, access rules | none | `security.md` |
+| Security roles, access rules | `microflow-xpath` (for constraints) | `security.md` |
 | Navigation profiles, menus | `navigation`, `glyph-icons` | `navigation.md` |
 | OQL queries, view entities | `view-entities` | `oql-queries.md` |
 | OData inter-app data sharing | `view-entities` | `odata-data-sharing.md` |
@@ -234,7 +262,7 @@ Where the two disagree, the server skill wins. It is generated from the running 
 | System module entities | none | `system-module.md` |
 | Project quality audit | none | `assess-quality.md` |
 
-Rows with `none` in the skill column have no server-side equivalent. Rows with `none` in the steering column are handled entirely by the server skill.
+Rows with `none` in the steering column are handled entirely by the server skill. Files for XPath, theming, microflow construction, and page construction were deleted once the server skills proved more thorough; page tool routing moved into the Page Tools section above, and all naming consolidated into `conventions.md`.
 
 ---
 

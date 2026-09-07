@@ -143,29 +143,28 @@ See [Maia Make Capabilities](https://docs.mendix.com/refguide/maia-make/) for th
 
 This power includes steering files that Kiro loads based on what you're working on:
 
-| File | When it's used |
+Steering files are deliberately thin. Studio Pro ships 19 skills of its own, reachable with `read_skill`, and those are the primary source. Each steering file carries only the delta.
+
+| File | Carries |
 |---|---|
-| `steering/domain-model.md` | Creating entities, attributes, associations, enumerations |
-| `steering/microflows.md` | Building microflows and nanoflows |
+| `steering/conventions.md` | Microflow prefixes, entity/attribute/page naming, reserved words |
+| `steering/domain-model.md` | Entity, association, and enumeration mechanics |
 | `steering/patterns-crud.md` | CRUD microflow and page patterns |
-| `steering/xpath-constraints.md` | XPath syntax for retrieves and access rules |
-| `steering/pages.md` | Creating and modifying pages, widgets, and layouts |
-| `steering/theme-styling.md` | SCSS/CSS theme customization |
 | `steering/create-custom-widget.md` | Building custom pluggable widgets (React/TypeScript) |
-| `steering/security.md` | Configuring access rules and module roles |
-| `steering/navigation.md` | Managing navigation profiles and menus |
-| `steering/oql-queries.md` | Writing OQL queries for view entities |
+| `steering/security.md` | Access rules, module roles, XPath constraint quoting |
+| `steering/navigation.md` | Role-based home pages and menu item roles |
+| `steering/oql-queries.md` | OQL syntax, and the `oql_generate` trap |
 | `steering/odata-data-sharing.md` | OData inter-app data sharing |
 | `steering/rest-integration.md` | Calling external REST APIs from microflows |
-| `steering/rest-sparql-integration.md` | Complex REST integrations (SPARQL, special auth, nested JSON) |
+| `steering/rest-sparql-integration.md` | Complex REST (SPARQL, special auth, nested JSON) |
 | `steering/business-events.md` | Event-driven messaging via Business Events / Kafka |
-| `steering/javascript-actions.md` | Creating and editing JavaScript actions |
-| `steering/java-actions.md` | Creating and editing Java actions |
-| `steering/agents.md` | Setting up Mendix AI agents (Mendix 11.9+) |
+| `steering/javascript-actions.md` | Catalogue of JS actions already shipping in a default project |
+| `steering/java-actions.md` | Java actions, which the MCP server cannot reach at all |
+| `steering/agents.md` | Mendix AI agents (unverified against 11.14) |
 | `steering/system-module.md` | System module entity reference |
 | `steering/assess-quality.md` | Auditing Mendix project quality |
 
----
+Handled entirely by server skills, so this power ships nothing for them: XPath syntax (`microflow-xpath`), microflow construction (`microflow-common`), page construction (`page-gen-common`), theming and design properties (`theming`, `design-properties`), workflows, Data Importer, database connections, send-email, unit tests, and version control.
 
 ## Key Rules Kiro Follows
 
